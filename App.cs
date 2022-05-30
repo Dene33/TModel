@@ -15,16 +15,17 @@ using TModel.MainFrame.Modules;
 using static TModel.ColorConverters;
 using Serilog;
 using Serilog.Configuration;
+using CUE4Parse.Compression;
+using System.Windows.Controls;
 
 namespace TModel
 {
     public class App : Application
     {
         // Runs the given action on the UI thread.
-        public static void Refresh(Action action)
+        public static void RunOnUI(Action action)
         {
-            if (Current != null)
-                Current.Dispatcher.Invoke(action, DispatcherPriority.Background);
+            Current?.Dispatcher.Invoke(action, DispatcherPriority.Background);
         }
 #if GENERATE_MODULES && !NO_WINDOW
         static ModulePanel modulePanel = new ModulePanel();
@@ -107,7 +108,8 @@ namespace TModel
 #endif
 #endif
 #if !NO_WINDOW
-        };
+
+            };
             app.MainWindow = Window;
             Window.Show();
 #endif
@@ -123,6 +125,7 @@ namespace TModel
             modulePanel.AddModule(Module_Right);
 
             modulePanel.MakeSeperator(Module_Right, new ModuleContainer(new LoggerModule(), false), new GridLength(150, GridUnitType.Pixel));
+
             app.Run();
 #endif
         }

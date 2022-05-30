@@ -301,7 +301,7 @@ namespace TModel.Modules
                             {
                                 VisiblePreviews.Add(itemPreviewInfo);
                                 gamefile.Info = itemPreviewInfo;
-                                App.Refresh(() =>
+                                App.RunOnUI(() =>
                                 {
                                     UpdatePageCount();
                                     UpdateLoadedCount();
@@ -316,7 +316,7 @@ namespace TModel.Modules
                         else
                         {
                             VisiblePreviews.Add(gamefile.Info);
-                            App.Refresh(() =>
+                            App.RunOnUI(() =>
                             {
                                 UpdatePageCount();
                                 UpdateLoadedCount();
@@ -426,7 +426,7 @@ namespace TModel.Modules
                 {
                     if (Info.PreviewIcon.Value != null)
                         if (Info.PreviewIcon.Value.TryGet_BitmapImage(out BitmapImage bitmapImage))
-                            App.Refresh(() =>
+                            App.RunOnUI(() =>
                             {
                                 Root.Children.Add(new Image()
                                 {

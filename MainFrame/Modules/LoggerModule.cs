@@ -71,7 +71,7 @@ namespace TModel.MainFrame.Modules
             if (LevelColors.TryGetValue(logEvent.Level, out Brush foundColor))
                 FinalColor = foundColor;
             var message = logEvent.RenderMessage(_formatProvider);
-            App.Refresh(() =>
+            App.RunOnUI(() =>
             {
                 LoggerModule.LogPanel.Children.Add(new ReadonlyText(message)
                 {

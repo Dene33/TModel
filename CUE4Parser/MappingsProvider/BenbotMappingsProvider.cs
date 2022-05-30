@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using CUE4Parse.Compression;
 using Newtonsoft.Json.Linq;
 using Serilog;
 
@@ -15,13 +16,14 @@ namespace CUE4Parse.MappingsProvider
         private readonly string? _specificVersion;
         private readonly string _gameName;
         private readonly bool _isWindows64Bit;
+        public bool Successful;
 
         public BenBotMappingsProvider(string gameName, string? specificVersion = null)
         {
             _specificVersion = specificVersion;
             _gameName = gameName;
             _isWindows64Bit = Environment.Is64BitOperatingSystem && RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            Reload();
+            Successful = Reload();
         }
 
         public const string BenMappingsEndpoint = "https://benbot.app/api/v1/mappings";
@@ -32,6 +34,8 @@ namespace CUE4Parse.MappingsProvider
         {
             return ReloadAsync().GetAwaiter().GetResult();
         }
+
+        public static Exception? FailedMappingsException;
 
         public sealed override async Task<bool> ReloadAsync()
         {
@@ -99,6 +103,7 @@ namespace CUE4Parse.MappingsProvider
             }
             catch (Exception e)
             {
+                FailedMappingsException = e;
                 Log.Warning(e, "Uncaught exception while reloading mappings from BenBot");
                 return false;
             }

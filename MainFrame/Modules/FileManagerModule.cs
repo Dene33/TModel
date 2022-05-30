@@ -1,5 +1,6 @@
 ﻿using CUE4Parse.Encryption.Aes;
 using CUE4Parse.FileProvider;
+using CUE4Parse.MappingsProvider;
 using CUE4Parse.UE4.Objects.Core.Misc;
 using CUE4Parse.UE4.Versions;
 using CUE4Parse.UE4.Vfs;
@@ -112,6 +113,8 @@ namespace TModel.Modules
             };
         }
 
+        public static Exception? FailedReason;
+
         public void LoadGameFiles()
         {
             IsLoading = true;
@@ -124,7 +127,7 @@ namespace TModel.Modules
                         App.FileProvider = new DefaultFileProvider(Preferences.GameDirectory, SearchOption.TopDirectoryOnly, false, new VersionContainer(EGame.GAME_UE5_1));
                         App.FileProvider.Initialize();
                     }
-                    InitilizeGame();
+                    FailedReason = InitilizeGame();
                 }
                 else
                 {
@@ -133,31 +136,47 @@ namespace TModel.Modules
             }
             ).GetAwaiter().OnCompleted(() =>
             {
-                if (App.FileProvider != null)
+                if (FailedReason is not null)
                 {
-                    if (App.FileProvider.MappingsForThisGame != null)
+                    Log.Error("Cannot load Fortnite!");
+                }
+                else
+                {
+                    if (App.FileProvider != null)
                     {
-                        HasLoaded = true;
-                        IsLoading = false;
-                        List<IAesVfsReader> AllVFS = new List<IAesVfsReader>();
-                        AllVFS.AddRange(App.FileProvider.MountedVfs);
-                        AllVFS.AddRange(App.FileProvider._unloadedVfs.Keys);
-                        AllVFS.Sort(new NameSort());
-                        FilesPanel.Children.Clear();
-                        LoadFiles(AllVFS, true);
-                        if (FilesLoaded != null)
-                            FilesLoaded();
-                        Log.Information("Finished loading");
+                        if (App.FileProvider.MappingsForThisGame != null)
+                        {
+                            HasLoaded = true;
+                            IsLoading = false;
+                            List<IAesVfsReader> AllVFS = new List<IAesVfsReader>();
+                            AllVFS.AddRange(App.FileProvider.MountedVfs);
+                            AllVFS.AddRange(App.FileProvider._unloadedVfs.Keys);
+                            AllVFS.Sort(new NameSort());
+                            FilesPanel.Children.Clear();
+                            LoadFiles(AllVFS, true);
+                            if (FilesLoaded != null)
+                                FilesLoaded();
+                            Log.Information("Finished loading");
+                        }
                     }
                 }
             });
         }
 
-        public static void InitilizeGame()
+        public static Exception? InitilizeGame()
         {
             Log.Information("Submitting keys");
             LoadAES();
             App.FileProvider.LoadMappings();
+
+            if (App.FileProvider.MappingsContainer is BenBotMappingsProvider benbotMappings && !benbotMappings.Successful)
+            {
+                return BenBotMappingsProvider.FailedMappingsException;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public static void LoadAES(bool force = false)

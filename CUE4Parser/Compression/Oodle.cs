@@ -37,8 +37,18 @@ namespace CUE4Parse.Compression
         public static bool LoadOodleDll(string? path = null)
         {
             if (File.Exists(OODLE_DLL_NAME)) return true;
-            return DownloadOodleDll(path).GetAwaiter().GetResult();
+            OodleFailException = null;
+            if (DownloadOodleDll(path).GetAwaiter().GetResult())
+            {
+                return true;
+            }
+            else
+            {
+                throw OodleFailException;
+            }
         }
+
+        public static Exception? OodleFailException;
 
         public static unsafe void Decompress(byte[] compressed, int compressedOffset, int compressedSize,
                                              byte[] uncompressed, int uncompressedOffset, int uncompressedSize, FArchive? reader = null)
@@ -74,9 +84,11 @@ namespace CUE4Parse.Compression
 
         public static async Task<bool> DownloadOodleDll(string? path)
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            
             try
             {
+                using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+
                 using var indexResponse = await client.GetAsync(WARFRAME_INDEX_URL).ConfigureAwait(false);
                 await using var indexLzmaStream = await indexResponse.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 await using var indexStream = new MemoryStream();
@@ -119,9 +131,17 @@ namespace CUE4Parse.Compression
             }
             catch (Exception e)
             {
-                Log.Warning(e, "Uncaught exception while downloading oodle dll");
+                Log.Warning($"Uncaught exception while downloading oodle dll:\n{e.ToString()}");
+                OodleFailException =  new FailedOodleDownloadException("Failed to download oodle dll", e);
             }
             return false;
         }
+    }
+
+    public class FailedOodleDownloadException : Exception
+    {
+        public FailedOodleDownloadException() { }
+        public FailedOodleDownloadException(string message) : base(message) { }
+        public FailedOodleDownloadException(string message, Exception inner) : base(message, inner) { }
     }
 }
