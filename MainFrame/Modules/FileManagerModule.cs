@@ -200,7 +200,14 @@ namespace TModel.Modules
             }
             AesKeys = JsonConvert.DeserializeObject<MainAesKeys>(JsonString).data;
             // Main key
-            App.FileProvider.SubmitKey(new FGuid(), new FAesKey(AesKeys.mainkey));
+
+            App.FileProvider.SubmitKey(new FGuid(), new FAesKey("0xA9AA68E485AB1A9A1777F5BE7A02C35ECCD93FCCCCD147F2EA67BA2DA7D35430"));
+
+            if (AesKeys.mainkey is not null)
+            {
+                App.FileProvider.SubmitKey(new FGuid(), new FAesKey(AesKeys.mainkey));
+            }
+            
             // Dynamic keys
             foreach (DynamicAesKey key in AesKeys.dynamicKeys)
                 App.FileProvider.SubmitKey(new FGuid(key.pakGuid), new FAesKey(key.key));
