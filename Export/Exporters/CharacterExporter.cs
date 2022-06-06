@@ -80,69 +80,82 @@ namespace TModel.Export.Exporters
 
                     foreach (var part in CustomParts)
                     {
-                        UCustomCharacterPart CharacterPart = part.Load<UCustomCharacterPart>();
-                        ModelRef PartModelRef = CharacterPart.GetModelRef();
-                        for (int j = 0; j < CosmeticVariants.Count; j++)
+                        try
                         {
-                            UFortCosmeticVariant variant = CosmeticVariants[j];
-                            StyleOptionBase[] VariantOptions = null;
-
-                            // Gets part options
-                            if (variant is UFortCosmeticMaterialVariant MaterialVariant)
-                                VariantOptions = MaterialVariant.MaterialOptions;
-                            else if (variant is UFortCosmeticCharacterPartVariant PartVariant)
-                                VariantOptions = PartVariant.PartOptions;
-
-
-
-                            if (VariantOptions != null)
+                            UCustomCharacterPart CharacterPart = part.Load<UCustomCharacterPart>();
+                            ModelRef PartModelRef = CharacterPart.GetModelRef();
+                            if (PartModelRef is not null)
                             {
-                                try
+                                for (int j = 0; j < CosmeticVariants.Count; j++)
                                 {
-                                    // Should be determined by 'styles'
-                                    StyleOptionBase SelectedOption = VariantOptions[styles[j]];
+                                    UFortCosmeticVariant variant = CosmeticVariants[j];
+                                    StyleOptionBase[] VariantOptions = null;
 
-                                    foreach (var variantPart in SelectedOption.VariantParts)
+                                    // Gets part options
+                                    if (variant is UFortCosmeticMaterialVariant MaterialVariant)
+                                        VariantOptions = MaterialVariant.MaterialOptions;
+                                    else if (variant is UFortCosmeticCharacterPartVariant PartVariant)
+                                        VariantOptions = PartVariant.PartOptions;
+
+
+
+                                    if (VariantOptions != null)
                                     {
-                                        UCustomCharacterPart LoadedPart = variantPart.Load<UCustomCharacterPart>();
-                                        if (CharacterPart.CharacterPartType == LoadedPart.CharacterPartType)
+                                        try
                                         {
-                                            PartModelRef = LoadedPart.GetModelRef();
-                                        }
-                                    }
+                                            // Should be determined by 'styles'
+                                            StyleOptionBase SelectedOption = VariantOptions[styles[j]];
 
-
-                                    // Applys material overrides to ModelRef
-                                    foreach (MaterialVariant overrideMaterial in SelectedOption.VariantMaterials)
-                                    {
-                                        for (int i = 0; i < PartModelRef.Materials.Count; i++)
-                                        {
-                                            if (PartModelRef.Materials[i].Material == overrideMaterial.MaterialToSwap)
+                                            foreach (var variantPart in SelectedOption.VariantParts)
                                             {
-                                                if (overrideMaterial.OverrideMaterial.TryLoad(out UObject LoadedMaterial))
+                                                UCustomCharacterPart LoadedPart = variantPart.Load<UCustomCharacterPart>();
+                                                if (CharacterPart.CharacterPartType == LoadedPart.CharacterPartType)
                                                 {
-                                                    if (LoadedMaterial is UMaterialInstanceConstant Instance)
+                                                    PartModelRef = LoadedPart.GetModelRef();
+                                                }
+                                            }
+
+
+                                            // Applys material overrides to ModelRef
+                                            foreach (MaterialVariant overrideMaterial in SelectedOption.VariantMaterials)
+                                            {
+                                                for (int i = 0; i < PartModelRef.Materials.Count; i++)
+                                                {
+                                                    if (PartModelRef.Materials[i].Material == overrideMaterial.MaterialToSwap)
                                                     {
-                                                        PartModelRef.Materials[i] = CMaterial.CreateReader(Instance);
-                                                    }
-                                                    else
-                                                    {
-                                                        Log.Error($"Failed to override material | Can't load material of type: {LoadedMaterial.ExportType}");
+                                                        if (overrideMaterial.OverrideMaterial.TryLoad(out UObject LoadedMaterial))
+                                                        {
+                                                            if (LoadedMaterial is UMaterialInstanceConstant Instance)
+                                                            {
+                                                                PartModelRef.Materials[i] = CMaterial.CreateReader(Instance);
+                                                            }
+                                                            else
+                                                            {
+                                                                Log.Error($"Failed to override material | Can't load material of type: {LoadedMaterial.ExportType}");
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
-                                    }
-                                }
-                                catch (System.Exception e)
-                                {
-                                    Log.Error("Failed to apply style: " + e.ToString());
-                                }
+                                        catch (System.Exception e)
+                                        {
+                                            Log.Error("Failed to apply style: " + e.ToString());
+                                        }
 
+                                    }
+
+                                }
+                                ExportInfo.Models.Add(PartModelRef);
                             }
 
                         }
-                        ExportInfo.Models.Add(PartModelRef);
+                        catch (System.Exception)
+                        {
+                            Log.Error($"Failed to export custom part: {part.AssetPathName}");
+                            throw;
+                        }
+
                     }
                 }
             }

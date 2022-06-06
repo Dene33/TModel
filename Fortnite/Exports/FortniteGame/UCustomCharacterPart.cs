@@ -110,3 +110,10 @@ namespace CUE4Parse.FN.Exports.FortniteGame
         }
     }
 }
+
+
+public class NullSkeletalMeshException : System.Exception
+{
+    public NullSkeletalMeshException() { }
+    public NullSkeletalMeshException(string message) : base(message) { }
+}
