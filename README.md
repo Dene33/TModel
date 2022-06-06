@@ -6,7 +6,7 @@ Application for exporting Fortnite models to blender (in less than a second)!
 
 ## Download
 
-[TModel](https://github.com/Tinfoilhat88/TModel/releases/download/temp-season3/TModel.exe)
+[TModel](https://github.com/Tinfoilhat88/TModel/releases/download/temp-commander/TModel.exe)
 
 [Addon - With IK](https://github.com/Tinfoilhat88/TModel/releases/download/temp-1/TModelAddon.py)
 <br>
